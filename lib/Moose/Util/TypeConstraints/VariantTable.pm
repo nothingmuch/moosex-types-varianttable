@@ -25,6 +25,11 @@ has _variant_list => (
     default => sub { [] },
 );
 
+sub clone {
+    my $self = shift;
+    ( ref $self )->new( _variant_list => [@{ $self->_variant_list }] );
+}
+
 sub merge {
     my ( @selves ) = @_; # our @selves reads better =/
 

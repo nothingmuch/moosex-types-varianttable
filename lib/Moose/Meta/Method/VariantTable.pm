@@ -11,7 +11,7 @@ has _variant_table => (
     isa => "Moose::Util::TypeConstraints::VariantTable",
     is  => "ro",
     default => sub { Moose::Util::TypeConstraints::VariantTable->new },
-    handles => qr/^[a-z]/,
+    handles => qr/^(?: \w+_variant$ | has_ )/x,
 );
 
 has body => (
@@ -21,6 +21,19 @@ has body => (
     builder => "initialize_body",
 );
 
+sub merge {
+    my ( $self, @others ) = @_; # our @selves reads better =/
+
+    return ( ref $self )->new(
+        _variant_table => $self->_variant_table->merge(map { $_->_variant_table } @others),
+    );
+}
+
+sub clone {
+    my $self = shift;
+    ( ref $self )->new( _variant_table => $self->_variant_table->clone );
+}
+    
 sub initialize_body {
     my $self = shift;
 
