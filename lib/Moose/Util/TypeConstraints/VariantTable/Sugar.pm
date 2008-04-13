@@ -23,12 +23,10 @@ sub variant_method ($$&) {
 	my $meta_method = $class->meta->get_method($name);
 
 	unless ( $meta_method ) {
-        if ( my $parent_method = ( $class->meta->find_all_methods_by_name($name) )[0] ) {
-            # FIXME allow overriding of variants
-            $meta_method = $parent_method->{code}->clone;
-        } else {
-            $meta_method = Moose::Meta::Method::VariantTable->new();
-        }
+        $meta_method = Moose::Meta::Method::VariantTable->new(
+            name => $name,
+            class => $meta,
+        );
 
         $meta->add_method( $name => $meta_method );
 	}

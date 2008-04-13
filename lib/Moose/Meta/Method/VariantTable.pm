@@ -14,6 +14,21 @@ has _variant_table => (
     handles => qr/^(?: \w+_variant$ | has_ )/x,
 );
 
+has super => (
+    isa => "Class::MOP::Method",
+    is  => "rw",
+    writer => "_super",
+    predicate => "has_super",
+);
+
+sub BUILD {
+    my ( $self, $params ) = @_;
+
+    if ( my $super = $params->{class}->find_next_method_by_name($params->{name})) {
+        $self->_super( $super );
+    }
+}
+
 has body => (
     isa => "CodeRef",
     is  => "ro",
@@ -29,15 +44,12 @@ sub merge {
     );
 }
 
-sub clone {
-    my $self = shift;
-    ( ref $self )->new( _variant_table => $self->_variant_table->clone );
-}
-    
 sub initialize_body {
     my $self = shift;
 
     my $variant_table = $self->_variant_table;
+
+    my $super_body = $self->has_super && $self->super->body;
 
     return sub {
         my ( $self, $value, @args ) = @_;
@@ -48,6 +60,8 @@ sub initialize_body {
                 : $self->can($result);
 
             goto $method;
+        } else {
+            goto $super_body if $super_body;
         }
 
         return;

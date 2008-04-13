@@ -59,8 +59,6 @@ is( $foo->foo($bar), "gorch", "$bar is now gorch because it's variant was remove
 
 is( $foo->foo($baz), "gorch", "$baz is gorch" );
 
-{ local $TODO = "use prototype inheritence in variant tables, not cloning";
 is( $oink->foo($bar), "gorch", "removal from superclass propagated" );
-}
 
 # TODO roles
