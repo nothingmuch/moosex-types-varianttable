@@ -43,7 +43,8 @@ sub merge {
 sub has_type {
     my ( $self, $type_or_name ) = @_;
 
-    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name);
+    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
+        or croak "No such type constraint: $type_or_name";
 
     foreach my $existing_type ( map { $_->{type} } @{ $self->_variant_list } ) {
         return 1 if $type->equals($existing_type);
@@ -55,7 +56,8 @@ sub has_type {
 sub has_parent {
     my ( $self, $type_or_name ) = @_;
 
-    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name);
+    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
+        or croak "No such type constraint: $type_or_name";
 
     foreach my $existing_type ( map { $_->{type} } @{ $self->_variant_list } ) {
         return 1 if $type->is_subtype_of($existing_type);
@@ -70,7 +72,8 @@ sub add_variant {
     croak "Duplicate variant entry for $type_or_name"
         if $self->has_type($type_or_name);
 
-    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name);
+    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
+        or croak "No such type constraint: $type_or_name";
 
     my $list = $self->_variant_list;
 
@@ -90,7 +93,8 @@ sub add_variant {
 sub remove_variant {
     my ( $self, $type_or_name, $value ) = @_;
 
-    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name);
+    my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
+        or croak "No such type constraint: $type_or_name";
 
     my $list = $self->_variant_list;
 
@@ -153,6 +157,9 @@ table
 
 =head1 SYNOPSIS
 
+    # see also Moose::Util::TypeConstraints::VariantTable::Sugar for a way to
+    # declare variant table based methods
+
 	use Moose::Util::TypeConstraints::VariantTable;
 
     my $dispatch_table = Moose::Util::TypeConstraints::VariantTable->new(
@@ -163,10 +170,22 @@ table
         ],
     );
 
-    # a handler will be chosen based on $item and which type constraints it passes
-    $dispatch_table->dispatch( $item, @args );
+    # look up the correct handler for $thingy based on the type constraints it passes
+    my $entry = $dispatch_table->find_variant($thingy);
+
+    # or use the 'dispatch' convenience method if the entries are code refs
+    $dispatch_table->dispatch( $thingy, @args );
 
 =head1 DESCRIPTION
+
+This object implements a simple dispatch table based on L<Moose> type constraints.
+
+Subtypes will be checked before their parents, meaning that the order of the
+declaration does not matter.
+
+This object is used internally by L<Moose::Meta::Method::VariantTable> and
+L<Moose::Util::TypeConstraints::VariantTable::Sugar> to provide primitive multi
+sub support.
 
 =head1 METHODS
 
@@ -201,16 +220,6 @@ Returns true if an entry for C<$type> is registered.
 Returns true if a parent type of C<$type> is registered.
 
 =back
-
-=cut
-
-
-
-=head1 VERSION CONTROL
-
-This module is maintained using Darcs. You can get the latest version from
-L<http://nothingmuch.woobling.org/code>, and use C<darcs send> to commit
-changes.
 
 =head1 AUTHOR
 

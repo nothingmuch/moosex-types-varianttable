@@ -7,6 +7,8 @@ extends qw(Moose::Object Moose::Meta::Method);
 
 use Moose::Util::TypeConstraints::VariantTable;
 
+use Carp qw(croak);
+
 has _variant_table => (
     isa => "Moose::Util::TypeConstraints::VariantTable",
     is  => "ro",
@@ -14,19 +16,26 @@ has _variant_table => (
     handles => qr/^(?: \w+_variant$ | has_ )/x,
 );
 
-has super => (
-    isa => "Class::MOP::Method",
-    is  => "rw",
-    writer => "_super",
-    predicate => "has_super",
+has class => (
+    isa => "Class::MOP::Class",
+    is  => "ro",
 );
 
-sub BUILD {
-    my ( $self, $params ) = @_;
+has name => (
+    isa => "Str",
+    is  => "ro",
+);
 
-    if ( my $super = $params->{class}->find_next_method_by_name($params->{name})) {
-        $self->_super( $super );
-    }
+has super => (
+    isa => "Maybe[Class::MOP::Method]",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+sub _build_super {
+    my $self = shift;
+
+    $self->class->find_next_method_by_name($self->name);
 }
 
 has body => (
@@ -37,7 +46,7 @@ has body => (
 );
 
 sub merge {
-    my ( $self, @others ) = @_; # our @selves reads better =/
+    my ( $self, @others ) = @_;
 
     return ( ref $self )->new(
         _variant_table => $self->_variant_table->merge(map { $_->_variant_table } @others),
@@ -49,7 +58,10 @@ sub initialize_body {
 
     my $variant_table = $self->_variant_table;
 
-    my $super_body = $self->has_super && $self->super->body;
+    my $super = $self->super;
+    my $super_body = $super && $super->body;
+
+    my $name = $self->name;
 
     return sub {
         my ( $self, $value, @args ) = @_;
@@ -64,7 +76,11 @@ sub initialize_body {
             goto $super_body if $super_body;
         }
 
-        return;
+        my $dump = eval { require Devel::PartialDump; 1 }
+            ? \&Devel::PartialDump::dump
+            : sub { return join $", map { overload::StrVal($_) } @_ };
+
+        croak "No variant of method '$name' found for ", $dump->($value, @args);
     };
 }
 
@@ -72,19 +88,3 @@ sub initialize_body {
 __PACKAGE__
 
 __END__
-
-=pod
-
-=head1 NAME
-
-Moose::Meta::Method::VariantTable - 
-
-=head1 SYNOPSIS
-
-	use Moose::Meta::Method::VariantTable;
-
-=head1 DESCRIPTION
-
-=cut
-
-
