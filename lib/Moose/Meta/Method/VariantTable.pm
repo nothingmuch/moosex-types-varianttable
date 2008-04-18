@@ -8,6 +8,7 @@ extends qw(Moose::Object Moose::Meta::Method);
 use Moose::Util::TypeConstraints::VariantTable;
 
 use Carp qw(croak);
+use Sub::Name qw(subname);
 
 has _variant_table => (
     isa => "Moose::Util::TypeConstraints::VariantTable",
@@ -24,6 +25,16 @@ has class => (
 has name => (
     isa => "Str",
     is  => "ro",
+);
+
+has full_name => (
+    isa => "Str",
+    is  => "ro",
+    lazy => 1,
+    default => sub {
+        my $self = shift;
+        join "::", $self->class->name, $self->name;
+    },
 );
 
 has super => (
@@ -63,7 +74,7 @@ sub initialize_body {
 
     my $name = $self->name;
 
-    return sub {
+    return subname $self->full_name, sub {
         my ( $self, $value, @args ) = @_;
 
         if ( my ( $result, $type ) = $variant_table->find_variant($value) ) {
@@ -73,7 +84,7 @@ sub initialize_body {
 
             goto $method;
         } else {
-            goto $super_body if $super_body;
+            return $self->next::method($value, @args);
         }
 
         my $dump = eval { require Devel::PartialDump; 1 }
