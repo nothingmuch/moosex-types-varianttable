@@ -13,7 +13,7 @@ our @EXPORT = qw(variant_method);
 
 use Moose::Meta::Method::VariantTable;
 
-sub variant_method ($$&) {
+sub variant_method ($$$) {
 	my ( $name, $type, $body ) = @_;
 
 	my $class = caller;
