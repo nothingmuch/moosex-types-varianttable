@@ -5,7 +5,7 @@ use warnings;
 
 use Test::More 'no_plan';
 
-use ok 'Moose::Util::TypeConstraints::VariantTable';
+use ok 'MooseX::Types::VariantTable';
 use Test::Exception;
 
 use Moose::Util::TypeConstraints;
@@ -48,7 +48,7 @@ BEGIN {
 
 foreach my $keys ( permute keys %types ) {
 
-    my $v = Moose::Util::TypeConstraints::VariantTable->new;
+    my $v = MooseX::Types::VariantTable->new;
 
     foreach my $key ( @$keys ) {
         $v->add_variant( $key => $types{$key} );
@@ -63,7 +63,7 @@ foreach my $keys ( permute keys %types ) {
     is( $v->find_variant( undef ), "any", "fallback to Item" );
 }
 
-my $v = Moose::Util::TypeConstraints::VariantTable->new(
+my $v = MooseX::Types::VariantTable->new(
     variants => [
         { type => "Foo", value => "a foo" },
         { type => "Bar", value => "a bar" },

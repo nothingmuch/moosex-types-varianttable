@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package Moose::Util::TypeConstraints::VariantTable::Sugar;
+package MooseX::Types::VariantTable::Declare;
 
 use strict;
 use warnings;
@@ -48,8 +48,8 @@ __END__
 
 =head1 NAME
 
-Moose::Util::TypeConstraints::VariantTable::Sugar - Declarative sugar for
-L<Moose::Util::TypeConstraints::VariantTable> based methods.
+MooseX::Types::VariantTable::Declare - Declarative sugar for
+L<MooseX::Types::VariantTable> based methods.
 
 =head1 SYNOPSIS
 

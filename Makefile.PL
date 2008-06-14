@@ -5,7 +5,7 @@ use strict;
 use ExtUtils::MakeMaker;
 
 WriteMakefile(
-	NAME         => 'Moose::Util::TypeConstraints::VariantTable',
+	NAME         => 'MooseX::Types::VariantTable',
 	VERSION_FROM => 'lib/Moose/Util/TypeConstraints/VariantTable.pm',
 	INSTALLDIRS  => 'site',
 	SIGN         => 1,

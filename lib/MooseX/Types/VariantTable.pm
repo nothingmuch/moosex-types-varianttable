@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 
-package Moose::Util::TypeConstraints::VariantTable;
+package MooseX::Types::VariantTable;
 use Moose;
 
 use Moose::Util::TypeConstraints;
@@ -152,17 +152,16 @@ __END__
 
 =head1 NAME
 
-Moose::Util::TypeConstraints::VariantTable - Type constraint based variant
-table
+MooseX::Types::VariantTable - Type constraint based variant table
 
 =head1 SYNOPSIS
 
-    # see also Moose::Util::TypeConstraints::VariantTable::Sugar for a way to
+    # see also MooseX::Types::VariantTable::Declare for a way to
     # declare variant table based methods
 
-	use Moose::Util::TypeConstraints::VariantTable;
+	use MooseX::Types::VariantTable;
 
-    my $dispatch_table = Moose::Util::TypeConstraints::VariantTable->new(
+    my $dispatch_table = MooseX::Types::VariantTable->new(
         variants => [
             { type => "Foo", value => \&foo_handler },
             { type => "Bar", value => \&bar_handler },
@@ -184,7 +183,7 @@ Subtypes will be checked before their parents, meaning that the order of the
 declaration does not matter.
 
 This object is used internally by L<Moose::Meta::Method::VariantTable> and
-L<Moose::Util::TypeConstraints::VariantTable::Sugar> to provide primitive multi
+L<MooseX::Types::VariantTable::Declare> to provide primitive multi
 sub support.
 
 =head1 METHODS
@@ -220,6 +219,14 @@ Returns true if an entry for C<$type> is registered.
 Returns true if a parent type of C<$type> is registered.
 
 =back
+
+=head1 TODO
+
+The meta method composes in multiple inheritence but not yet with roles due to
+extensibility issues with the role application code.
+
+When L<Moose::Meta::Role> can pluggably merge methods variant table methods can
+gain role composition.
 
 =head1 AUTHOR
 

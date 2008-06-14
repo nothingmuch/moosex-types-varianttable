@@ -21,7 +21,7 @@ use Test::More 'no_plan';
 
     package Foo;
     use Moose;
-    use Moose::Util::TypeConstraints::VariantTable::Sugar;
+    use MooseX::Types::VariantTable::Declare;
 
     variant_method foo => Gorch => sub { "gorch" };
     variant_method foo => Bar => sub { "bar" };
@@ -32,7 +32,7 @@ use Test::More 'no_plan';
 
     extends qw(Foo);
 
-    Moose::Util::TypeConstraints::VariantTable::Sugar::variant_method( foo => Baz => sub { "baz" } );
+    MooseX::Types::VariantTable::Declare::variant_method( foo => Baz => sub { "baz" } );
 }
 
 my $bar = Bar->new;

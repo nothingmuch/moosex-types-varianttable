@@ -5,15 +5,15 @@ use Moose;
 
 extends qw(Moose::Object Moose::Meta::Method);
 
-use Moose::Util::TypeConstraints::VariantTable;
+use MooseX::Types::VariantTable;
 
 use Carp qw(croak);
 use Sub::Name qw(subname);
 
 has _variant_table => (
-    isa => "Moose::Util::TypeConstraints::VariantTable",
+    isa => "MooseX::Types::VariantTable",
     is  => "ro",
-    default => sub { Moose::Util::TypeConstraints::VariantTable->new },
+    default => sub { MooseX::Types::VariantTable->new },
     handles => qr/^(?: \w+_variant$ | has_ )/x,
 );
 
@@ -99,3 +99,4 @@ sub initialize_body {
 __PACKAGE__
 
 __END__
+
