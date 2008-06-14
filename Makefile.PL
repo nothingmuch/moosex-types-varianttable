@@ -6,7 +6,7 @@ use ExtUtils::MakeMaker;
 
 WriteMakefile(
 	NAME         => 'MooseX::Types::VariantTable',
-	VERSION_FROM => 'lib/Moose/Util/TypeConstraints/VariantTable.pm',
+	VERSION_FROM => 'lib/MooseX/Types/VariantTable.pm',
 	INSTALLDIRS  => 'site',
 	SIGN         => 1,
 	PL_FILES     => { },
