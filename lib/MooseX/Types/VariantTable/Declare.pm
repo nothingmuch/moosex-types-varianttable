@@ -108,4 +108,13 @@ superclass.
 
 This allows shadowing of types from the superclass even using broader types.
 
+=head2 Roles
+
+... are currently broken.
+
+Don't use variant table methods in a role, unless that's the only definition,
+because in the future variant table merging will happen at role composition
+time in a role composition like way, so your code will not continue to work the
+same.
+
 =back
