@@ -7,9 +7,12 @@ use warnings;
 
 use Carp qw(croak);
 
-use base qw(Exporter);
-
-our @EXPORT = qw(variant_method);
+use Sub::Exporter -setup => {
+    exports => [qw(variant_method)],
+    groups => {
+        default => [qw(variant_method)],
+    },
+};
 
 use Moose::Meta::Method::VariantTable;
 
