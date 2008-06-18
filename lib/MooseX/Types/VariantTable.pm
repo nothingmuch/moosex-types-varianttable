@@ -5,6 +5,8 @@ use Moose;
 
 use Moose::Util::TypeConstraints;
 
+with qw(MooseX::Clone);
+
 use Carp qw(croak);
 
 our $VERSION = "0.01";
@@ -20,15 +22,11 @@ sub BUILD {
 }
 
 has _variant_list => (
+    traits => [qw(Copy)],
     isa => "ArrayRef[HashRef]",
     is  => "rw",
     default => sub { [] },
 );
-
-sub clone {
-    my $self = shift;
-    ( ref $self )->new( _variant_list => [@{ $self->_variant_list }] );
-}
 
 sub merge {
     my ( @selves ) = @_; # our @selves reads better =/

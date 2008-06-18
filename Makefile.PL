@@ -15,6 +15,7 @@ WriteMakefile(
         'Test::Exception' => 0,
         'Sub::Exporter' => 0,
         'Moose' => '0.41', # for Class tc to sort properly it needs a fixed is_subtype_of
+        'MooseX::Clone' => '0.03', # Copy
     },
 );
 
