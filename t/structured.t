@@ -13,9 +13,9 @@ BEGIN {
 }
 
 use MooseX::Types::Structured qw/Tuple Dict/;
-use MooseX::Types::Moose qw/Num Str Any/;
+use MooseX::Types::Moose qw/Num Int Str Any/;
 
-plan tests => 5;
+plan tests => 6;
 
 {
     my $t = MooseX::Types::VariantTable->new;
@@ -47,4 +47,12 @@ plan tests => 5;
     ok(!$t->find_variant([[ Paper->new, Scissors->new ], {}]));
     ok(!$t->find_variant([[ Stone->new, Stone->new    ], {}]));
     ok( $t->find_variant([[ Paper->new, Stone->new    ], {}]));
+}
+
+{
+    my $t = MooseX::Types::VariantTable->new;
+    $t->add_variant( Tuple[Tuple[ Int, Num ], Dict[]] => 'first' );
+    $t->add_variant( Tuple[Tuple[ Num, Int ], Dict[]] => 'second' );
+
+    ok(!$t->find_variant([[ 42, 23 ], {}]));
 }
