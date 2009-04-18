@@ -1,6 +1,7 @@
 use strict;
 use warnings;
 use Test::More;
+use Test::Exception;
 use MooseX::Types::VariantTable;
 use Moose::Util::TypeConstraints;
 
@@ -54,7 +55,10 @@ plan tests => 9;
     $t->add_variant( Tuple[Tuple[ Int, Num ], Dict[]] => 'first' );
     $t->add_variant( Tuple[Tuple[ Num, Int ], Dict[]] => 'second' );
 
-    ok(!$t->find_variant([[ 42, 23 ], {}]));
+    dies_ok { $t->find_variant([[ 42, 23 ], {}]) };
+
+    is($t->find_variant([[ 42, 23.3 ], {}]), 'first');
+    is($t->find_variant([[ 42.2, 23 ], {}]), 'second');
 }
 
 {
