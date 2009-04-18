@@ -3,13 +3,34 @@
 package MooseX::Types::VariantTable;
 use Moose;
 
+use Hash::Util::FieldHash::Compat qw(idhash);
+use Scalar::Util qw(refaddr);
+
 use Moose::Util::TypeConstraints;
+
+use namespace::clean -except => 'meta';
 
 with qw(MooseX::Clone);
 
 use Carp qw(croak);
 
 our $VERSION = "0.01";
+
+has _sorted_variants => (
+    traits => [qw(NoClone)],
+    #isa => "ArrayRef[ArrayRef[HashRef]]",
+    is  => "ro",
+    lazy_build => 1,
+);
+
+has variants => (
+    traits => [qw(Copy)],
+    isa => "ArrayRef[HashRef]",
+    is  => "rw",
+    init_arg => undef,
+    default  => sub { [] },
+    trigger  => sub { $_[0]->_clear_sorted_variants },
+);
 
 sub BUILD {
     my ( $self, $params ) = @_;
@@ -21,20 +42,13 @@ sub BUILD {
     }
 }
 
-has _variant_list => (
-    traits => [qw(Copy)],
-    isa => "ArrayRef[HashRef]",
-    is  => "rw",
-    default => sub { [] },
-);
-
 sub merge {
     my ( @selves ) = @_; # our @selves reads better =/
 
     my $self = $selves[0];
 
     return ( ref $self )->new(
-        variants => [ map { @{ $_->_variant_list } } @selves ],
+        variants => [ map { @{ $_->variants } } @selves ],
     );
 }
 
@@ -44,7 +58,7 @@ sub has_type {
     my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
         or croak "No such type constraint: $type_or_name";
 
-    foreach my $existing_type ( map { $_->{type} } @{ $self->_variant_list } ) {
+    foreach my $existing_type ( map { $_->{type} } @{ $self->variants } ) {
         return 1 if $type->equals($existing_type);
     }
 
@@ -57,7 +71,7 @@ sub has_parent {
     my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
         or croak "No such type constraint: $type_or_name";
 
-    foreach my $existing_type ( map { $_->{type} } @{ $self->_variant_list } ) {
+    foreach my $existing_type ( map { $_->{type} } @{ $self->variants } ) {
         return 1 if $type->is_subtype_of($existing_type);
     }
 
@@ -73,18 +87,12 @@ sub add_variant {
     my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
         or croak "No such type constraint: $type_or_name";
 
-    my $list = $self->_variant_list;
-
     my $entry = { type => $type, value => $value };
 
-    for ( my $i = 0; $i < @$list; $i++ ) {
-        if ( $type->is_subtype_of($list->[$i]{type}) ) {
-            splice @$list, $i, 0, $entry;
-            return;
-        }
-    }
+    push @{ $self->variants }, $entry;
 
-    push @$list, $entry;
+    $self->_clear_sorted_variants;
+
     return;
 }
 
@@ -94,11 +102,58 @@ sub remove_variant {
     my $type = Moose::Util::TypeConstraints::find_type_constraint($type_or_name)
         or croak "No such type constraint: $type_or_name";
 
-    my $list = $self->_variant_list;
+    my $list = $self->variants;
 
     @$list = grep { not $_->{type}->equals($type) } @$list;
 
+    $self->_clear_sorted_variants;
+
     return;
+}
+
+sub _build__sorted_variants {
+    my $self = shift;
+
+    my @entries = @{ $self->variants };
+
+    idhash my %out;
+
+    foreach my $entry ( @entries ) {
+        $out{$entry} = [];
+        foreach my $other ( @entries ) {
+            next if refaddr($entry) == refaddr($other);
+
+            if ( $other->{type}->is_subtype_of($entry->{type}) ) {
+                push @{ $out{$entry} }, $other;
+            }
+        }
+    }
+
+    my @sorted;
+
+    while ( keys %out ) {
+        my @slot;
+
+        foreach my $entry ( @entries ) {
+            if ( $out{$entry} and not @{ $out{$entry} } ) {
+                push @slot, $entry;
+                delete $out{$entry};
+            }
+        }
+
+        idhash my %filter;
+        @filter{@slot} = ();
+
+        foreach my $entry ( @entries ) {
+            if ( my $out = $out{$entry} ) {
+                @$out = grep { not exists $filter{$_} } @$out;
+            }
+        }
+
+        push @sorted, \@slot;
+    }
+
+    return \@sorted;
 }
 
 sub find_variant {
@@ -118,9 +173,17 @@ sub find_variant {
 sub _find_variant {
     my ( $self, $value ) = @_;
 
-    foreach my $entry ( @{ $self->_variant_list } ) {
-        if ( $entry->{type}->check($value) ) {
-            return $entry;
+    foreach my $slot ( @{ $self->_sorted_variants } ) {
+        my @matches;
+        foreach my $entry ( @$slot ) {
+            if ( $entry->{type}->check($value) ) {
+                push @matches, $entry;
+            }
+        }
+        if ( @matches == 1 ) {
+            return $matches[0];
+        } elsif ( @matches > 1 ) {
+            croak "Ambiguous match " . join(", ", map { $_->{type} } @matches);
         }
     }
 

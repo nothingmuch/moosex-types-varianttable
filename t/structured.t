@@ -14,9 +14,18 @@ BEGIN {
 }
 
 use MooseX::Types::Structured qw/Tuple Dict/;
-use MooseX::Types::Moose qw/Num Int Str Any/;
+use MooseX::Types::Moose qw/Num Int Str Item/;
 
-plan tests => 9;
+plan tests => 16;
+
+{
+    my $t = MooseX::Types::VariantTable->new;
+    $t->add_variant( Num => 'Num' );
+    $t->add_variant( Str => 'Str' );
+
+    is($t->find_variant(21), 'Num');
+    is($t->find_variant('hey'), 'Str');
+}
 
 {
     my $t = MooseX::Types::VariantTable->new;
@@ -40,14 +49,20 @@ plan tests => 9;
 
 {
     my $t = MooseX::Types::VariantTable->new;
+    $t->add_variant( Tuple[Tuple[ class_type('Paper'),    class_type('Paper')    ], Dict[]] => 0 );
+    $t->add_variant( Tuple[Tuple[ class_type('Stone'),    class_type('Stone')    ], Dict[]] => 0 );
+    $t->add_variant( Tuple[Tuple[ class_type('Scissors'), class_type('Scissors') ], Dict[]] => 0 );
     $t->add_variant( Tuple[Tuple[ class_type('Paper'),    class_type('Stone')    ], Dict[]] => 1 );
     $t->add_variant( Tuple[Tuple[ class_type('Scissors'), class_type('Paper')    ], Dict[]] => 1 );
     $t->add_variant( Tuple[Tuple[ class_type('Stone'),    class_type('Scissors') ], Dict[]] => 1 );
-    $t->add_variant( Tuple[Tuple[ Any, Any ], Dict[]] => 0);
+    $t->add_variant( Tuple[Tuple[ Item, Item ], Dict[]] => -1);
 
-    ok(!$t->find_variant([[ Paper->new, Scissors->new ], {}]));
-    ok(!$t->find_variant([[ Stone->new, Stone->new    ], {}]));
-    ok( $t->find_variant([[ Paper->new, Stone->new    ], {}]));
+    is( $t->find_variant([[ Paper->new, Scissors->new ], {}]), -1 );
+    is( $t->find_variant([[ Paper->new, Stone->new    ], {}]), 1 );
+    is( $t->find_variant([[ Stone->new, Stone->new    ], {}]), 0 );
+    is( $t->find_variant([[ Paper->new, Paper->new    ], {}]), 0 );
+    is( $t->find_variant([[ Stone->new, Paper->new    ], {}]), -1 );
+    is( $t->find_variant([[ Paper->new, Stone->new    ], {}]), 1 );
 }
 
 {

@@ -14,7 +14,8 @@ WriteMakefile(
         'Test::use::ok' => 0,
         'Test::Exception' => 0,
         'Sub::Exporter' => 0,
-        'Moose' => '0.41', # for Class tc to sort properly it needs a fixed is_subtype_of
+        'Moose' => '0.75', # for Class tc to sort properly it needs a fixed is_subtype_of, Num as subtype of Str
+        'MooseX::Types::Structured' => '0.12',
         'MooseX::Clone' => '0.03', # Copy
     },
 );
